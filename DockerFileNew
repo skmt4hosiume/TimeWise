@@ -1,0 +1,33 @@
+# 基底イメージとしてNode.jsの公式イメージを使用
+FROM node:18-alpine
+
+# 作業ディレクトリを設定
+WORKDIR /app
+
+# パッケージの依存関係を定義したファイルをコピー
+COPY launch.json ./
+
+# パッケージをインストール
+RUN npm install
+
+# アプリケーションのソースコードをコピー
+COPY newone.js
+
+# ビルド実行
+RUN npm run build
+
+# 実行イメージ
+FROM node:18-alpine
+
+WORKDIR /app
+
+# ビルド結果をコピー
+COPY --from=builder /app/.next .
+
+EXPOSE 3000
+ENV PORT=3000
+
+# .envファイルからAPIキーを読み込む
+ENV API_KEY=$(cat /app/envfile.env | grep API_KEY= | cut -d= -f2)
+
+CMD ["node", "newone.js"]
